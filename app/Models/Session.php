@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Casts\BinaryIp;
+use Database\Factories\SessionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,9 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * la cookie de sesión de Laravel); es el registro auditable de "qué
  * dispositivo, con qué empresa activa, desde cuándo" — visible para que el
  * usuario pueda revisar/cerrar sus sesiones (Ley 21.719, derecho a saber).
+ * `revoked_at` sí tiene efecto real: VerificarSesionVigente corta la sesión
+ * de Laravel asociada en el siguiente request (ver AuthService::CLAVE_SESION_ID).
  */
 class Session extends Model
 {
+    /** @use HasFactory<SessionFactory> */
+    use HasFactory;
+
     public $table = 'sessions';
 
     public $timestamps = false;
