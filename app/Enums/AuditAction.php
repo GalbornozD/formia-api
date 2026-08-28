@@ -12,4 +12,5 @@ enum AuditAction: string
     case MembresiaCreada = 'membresia_creada';
     case MembresiaActualizada = 'membresia_actualizada';
     case MembresiaEliminada = 'membresia_eliminada';
+    case SesionRevocada = 'sesion_revocada';
 }

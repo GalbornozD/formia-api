@@ -73,6 +73,7 @@ class AuthController extends Controller
         $empresaId = (int) $request->validated('empresa_id');
 
         $request->session()->put('empresa_activa_id', $empresaId);
+        $this->authService->sesionActual($request)?->update(['company_id' => $empresaId]);
 
         $this->auditLogger->registrar(AuditAction::CambioEmpresaActiva, $usuario, $empresaId);
 

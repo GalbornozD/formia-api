@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ResolveEmpresaActiva;
+use App\Http\Middleware\VerificarSesionVigente;
 use App\Support\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'empresa.activa' => ResolveEmpresaActiva::class,
+            'sesion.vigente' => VerificarSesionVigente::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

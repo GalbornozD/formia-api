@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\Session;
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -142,5 +144,37 @@ class AuthTest extends TestCase
 
         $response->assertOk();
         $this->assertGuest('web');
+    }
+
+    public function test_login_crea_un_registro_de_sesion_para_el_dispositivo(): void
+    {
+        $usuario = User::factory()->create(['password_hash' => 'password12345']);
+
+        $this->postJson('/api/login', [
+            'email' => $usuario->email,
+            'password' => 'password12345',
+        ])->assertOk();
+
+        $this->assertSame(1, Session::where('user_id', $usuario->id)->count());
+        $sesion = Session::where('user_id', $usuario->id)->firstOrFail();
+        $this->assertNull($sesion->revoked_at);
+        $this->assertTrue($sesion->expires_at->isFuture());
+        $this->assertSame($sesion->id, session(AuthService::CLAVE_SESION_ID));
+    }
+
+    public function test_logout_revoca_el_registro_de_sesion_del_dispositivo(): void
+    {
+        $usuario = User::factory()->create(['password_hash' => 'password12345']);
+
+        $this->postJson('/api/login', [
+            'email' => $usuario->email,
+            'password' => 'password12345',
+        ])->assertOk();
+
+        $sesion = Session::where('user_id', $usuario->id)->firstOrFail();
+
+        $this->postJson('/api/logout')->assertOk();
+
+        $this->assertNotNull($sesion->fresh()->revoked_at);
     }
 }
