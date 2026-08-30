@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(FieldTypeSeeder::class);
+
         $empresaUno = Company::factory()->create(['legal_name' => 'OCA Global Chile']);
         $empresaDos = Company::factory()->create(['legal_name' => 'OCA Global Perú']);
 

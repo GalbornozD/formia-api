@@ -8,6 +8,11 @@ El esquema de la base de datos real se gestiona fuera de Laravel (SQL directo, a
 
 Para dar de alta usuarios usa el comando `php artisan usuario:crear` (`app/Console/Commands/CrearUsuarioCommand.php`), no seeders ni migraciones.
 
+# Reglas de flujo de trabajo
+
+- No crear archivos de test.
+- Si necesitas crear archivos factory temporalmente, elimínalos antes de finalizar la tarea.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -97,7 +102,7 @@ Before relying on a package's API, confirm its installed version:
 
 ### Model Creation
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
+- When creating new models, create useful factories and seeders for them tohas nuevamente lo mismo con el contructor de formulario que se vea el sidenav el header etc y mejora la ux y ui o. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
 ## APIs & Eloquent Resources
 

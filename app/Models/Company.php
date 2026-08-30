@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['uuid', 'legal_name', 'rut', 'status'])]
 class Company extends Model
@@ -36,5 +37,29 @@ class Company extends Model
     public function membresias(): HasMany
     {
         return $this->hasMany(CompanyUser::class, 'company_id');
+    }
+
+    /**
+     * @return HasMany<FormType, $this>
+     */
+    public function formTypes(): HasMany
+    {
+        return $this->hasMany(FormType::class, 'company_id');
+    }
+
+    /**
+     * @return HasOne<CompanyBranding, $this>
+     */
+    public function branding(): HasOne
+    {
+        return $this->hasOne(CompanyBranding::class, 'company_id');
+    }
+
+    /**
+     * @return HasOne<CompanySettings, $this>
+     */
+    public function settings(): HasOne
+    {
+        return $this->hasOne(CompanySettings::class, 'company_id');
     }
 }
