@@ -48,6 +48,37 @@ class FormTypeTest extends TestCase
         ]);
     }
 
+    public function test_descripcion_enriquecida_se_sanitiza_y_puede_superar_255_caracteres(): void
+    {
+        $master = User::factory()->master()->create();
+        $empresa = Company::factory()->create();
+        $contenido = str_repeat('Contenido de evaluación ', 20);
+
+        $response = $this->actingAs($master, 'web')->postJson("/api/empresas/{$empresa->id}/tipos-formulario", [
+            'nombre' => 'Evaluación enriquecida',
+            'descripcion' => "<h1>Objetivo</h1><p onclick=\"alert(1)\"><strong>{$contenido}</strong></p><script>alert(2)</script>",
+        ]);
+
+        $response->assertCreated();
+        $description = $response->json('data.description');
+        $this->assertIsString($description);
+        $this->assertStringContainsString('<strong>', $description);
+        $this->assertStringNotContainsString('onclick', $description);
+        $this->assertStringNotContainsString('script', $description);
+        $this->assertGreaterThan(255, strlen($description));
+    }
+
+    public function test_descripcion_enriquecida_respeta_un_limite_tecnico_razonable(): void
+    {
+        $master = User::factory()->master()->create();
+        $empresa = Company::factory()->create();
+
+        $this->actingAs($master, 'web')->postJson("/api/empresas/{$empresa->id}/tipos-formulario", [
+            'nombre' => 'Descripción demasiado extensa',
+            'descripcion' => str_repeat('a', 20001),
+        ])->assertUnprocessable()->assertJsonValidationErrors('descripcion');
+    }
+
     public function test_administrador_puede_crear_tipo_de_formulario_en_su_empresa(): void
     {
         $administrador = User::factory()->create();

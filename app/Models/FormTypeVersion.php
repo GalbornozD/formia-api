@@ -50,6 +50,14 @@ class FormTypeVersion extends Model
     }
 
     /**
+     * @return HasMany<FormPublication, $this>
+     */
+    public function publications(): HasMany
+    {
+        return $this->hasMany(FormPublication::class, 'form_type_version_id');
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo

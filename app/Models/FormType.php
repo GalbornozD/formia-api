@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedRichText;
 use App\Policies\FormTypePolicy;
 use Database\Factories\FormTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -32,6 +33,7 @@ class FormType extends Model
     protected function casts(): array
     {
         return [
+            'description' => SanitizedRichText::class,
             'status' => 'boolean',
         ];
     }
@@ -74,6 +76,14 @@ class FormType extends Model
                         ->where('is_active', true);
                 }
             );
+    }
+
+    /**
+     * @return HasMany<FormPublication, $this>
+     */
+    public function publications(): HasMany
+    {
+        return $this->hasMany(FormPublication::class, 'form_type_id');
     }
 
     /**

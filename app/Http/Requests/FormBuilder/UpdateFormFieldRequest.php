@@ -28,7 +28,7 @@ class UpdateFormFieldRequest extends FormRequest
             'parent_field_id' => ['sometimes', 'nullable', 'integer', 'exists:form_fields,id'],
             'field_key' => ['sometimes', 'string', 'max:100', 'regex:/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/'],
             'label' => ['sometimes', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:20000'],
             'placeholder' => ['sometimes', 'nullable', 'string', 'max:255'],
             'default_value' => ['sometimes', 'nullable'],
             'is_required' => ['sometimes', 'boolean'],

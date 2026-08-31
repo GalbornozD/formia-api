@@ -28,7 +28,7 @@ class StoreTipoFormularioRequest extends FormRequest
                 'max:150',
                 Rule::unique('form_types', 'name')->where('company_id', $this->empresaId()),
             ],
-            'descripcion' => ['nullable', 'string', 'max:255'],
+            'descripcion' => ['nullable', 'string', 'max:20000'],
         ];
     }
 

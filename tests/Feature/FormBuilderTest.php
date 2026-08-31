@@ -42,6 +42,26 @@ class FormBuilderTest extends TestCase
         $this->version = $this->formType->versions()->sole();
     }
 
+    public function test_field_description_is_stored_as_sanitized_rich_text(): void
+    {
+        $field = $this->createField('text', 'safety_notes', ['label' => 'Notas de seguridad']);
+
+        $response = $this->actingAs($this->actor, 'web')
+            ->putJson($this->fieldUrl($field), [
+                'description' => '<p>Adjunta el <strong>documento</strong>.</p><a href="javascript:alert(1)">No ejecutar</a>',
+            ])
+            ->assertOk();
+
+        $response->assertJsonPath(
+            'data.description',
+            '<p>Adjunta el <strong>documento</strong>.</p><a>No ejecutar</a>',
+        );
+        $this->assertSame(
+            '<p>Adjunta el <strong>documento</strong>.</p><a>No ejecutar</a>',
+            $field->fresh()->description,
+        );
+    }
+
     public function test_can_add_update_reorder_and_delete_nested_fields(): void
     {
         $section = $this->createField('section', 'personal_data', ['label' => 'Datos personales']);

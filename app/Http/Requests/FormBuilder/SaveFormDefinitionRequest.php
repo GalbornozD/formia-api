@@ -27,7 +27,7 @@ class SaveFormDefinitionRequest extends FormRequest
             'fields.*.field_type_id' => ['required', 'integer', 'exists:field_types,id'],
             'fields.*.field_key' => ['required', 'string', 'max:100', 'regex:/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/'],
             'fields.*.label' => ['required', 'string', 'max:255'],
-            'fields.*.description' => ['present', 'nullable', 'string'],
+            'fields.*.description' => ['present', 'nullable', 'string', 'max:20000'],
             'fields.*.placeholder' => ['present', 'nullable', 'string', 'max:255'],
             'fields.*.default_value' => ['present', 'nullable'],
             'fields.*.is_required' => ['required', 'boolean'],

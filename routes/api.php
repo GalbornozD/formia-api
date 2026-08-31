@@ -4,15 +4,41 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyBrandingController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\DistributionLists\DistributionListController;
+use App\Http\Controllers\DistributionLists\DistributionListMemberController;
 use App\Http\Controllers\EmpresaTipoFormularioController;
 use App\Http\Controllers\EmpresaUsuarioController;
 use App\Http\Controllers\FieldTypeController;
 use App\Http\Controllers\FormFieldController;
 use App\Http\Controllers\FormFieldOptionController;
+use App\Http\Controllers\FormResponses\AdminFormPublicationController;
+use App\Http\Controllers\FormResponses\FormAssignmentController;
+use App\Http\Controllers\FormResponses\FormInvitationController;
+use App\Http\Controllers\FormResponses\MyFormController;
+use App\Http\Controllers\FormResponses\MyFormResponseController;
+use App\Http\Controllers\FormResponses\PublicationAudienceController;
+use App\Http\Controllers\FormResponses\PublicFormController;
+use App\Http\Controllers\FormResponses\PublicFormResponseController;
+use App\Http\Controllers\FormResponses\PublicInvitationController;
 use App\Http\Controllers\FormTypeVersionController;
+use App\Http\Controllers\GuestRespondents\GuestRespondentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware('throttle:public-forms')->prefix('/public')->group(function () {
+    Route::get('/forms/{publicationUuid}', [PublicFormController::class, 'show']);
+    Route::post('/forms/{publicationUuid}/responses', [PublicFormResponseController::class, 'store']);
+    Route::get('/responses/{responseUuid}', [PublicFormResponseController::class, 'show']);
+    Route::patch('/responses/{responseUuid}', [PublicFormResponseController::class, 'update']);
+    Route::post('/responses/{responseUuid}/submit', [PublicFormResponseController::class, 'submit']);
+
+    // Invitados con link personalizado (`/f/{uuid}/invite/{token}` en el
+    // frontend) — identidad resuelta 100% desde el hash del token, nunca
+    // desde IDs recibidos en la URL.
+    Route::get('/invitations/{token}', [PublicInvitationController::class, 'show']);
+    Route::post('/invitations/{token}/responses', [PublicInvitationController::class, 'store']);
+});
 
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:login');
@@ -46,6 +72,13 @@ Route::middleware(['auth:sanctum', 'sesion.vigente'])->group(function () {
     // Rutas de negocio: exigen que ya haya una empresa activa válida antes de
     // llegar al controlador (master queda exento, ver ResolveEmpresaActiva).
     Route::middleware('empresa.activa')->group(function () {
+        Route::get('/me/forms', [MyFormController::class, 'index']);
+        Route::get('/me/form-publications/{publicationUuid}', [MyFormController::class, 'show']);
+        Route::post('/me/form-publications/{publicationUuid}/responses', [MyFormResponseController::class, 'store']);
+        Route::get('/me/form-responses/{responseUuid}', [MyFormResponseController::class, 'show']);
+        Route::patch('/me/form-responses/{responseUuid}', [MyFormResponseController::class, 'update']);
+        Route::post('/me/form-responses/{responseUuid}/submit', [MyFormResponseController::class, 'submit']);
+
         Route::get('/field-types', [FieldTypeController::class, 'index'])
             ->name('field-types.index');
 
@@ -73,14 +106,47 @@ Route::middleware(['auth:sanctum', 'sesion.vigente'])->group(function () {
         Route::apiResource('empresas.usuarios', EmpresaUsuarioController::class)
             ->parameters(['empresas' => 'empresa', 'usuarios' => 'usuario'])
             ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/empresas/{empresa}/usuarios/buscar', [EmpresaUsuarioController::class, 'search']);
 
         Route::apiResource('empresas.tipos-formulario', EmpresaTipoFormularioController::class)
             ->parameters(['empresas' => 'empresa', 'tipos-formulario' => 'tipoFormulario'])
             ->only(['index', 'store', 'update', 'destroy']);
 
+        Route::apiResource('empresas.distribution-lists', DistributionListController::class)
+            ->parameters(['empresas' => 'empresa', 'distribution-lists' => 'distributionList']);
+
+        Route::prefix('/empresas/{empresa}/distribution-lists/{distributionList}')
+            ->scopeBindings()
+            ->group(function () {
+                Route::get('/members', [DistributionListMemberController::class, 'index']);
+                Route::post('/members', [DistributionListMemberController::class, 'store']);
+                Route::delete('/members', [DistributionListMemberController::class, 'destroy']);
+            });
+
+        Route::apiResource('empresas.guest-respondents', GuestRespondentController::class)
+            ->parameters(['empresas' => 'empresa', 'guest-respondents' => 'guestRespondent'])
+            ->only(['index', 'store', 'show', 'update', 'destroy']);
+
         Route::prefix('/empresas/{empresa}/tipos-formulario/{formType}')
             ->scopeBindings()
             ->group(function () {
+                Route::get('/publicaciones', [AdminFormPublicationController::class, 'index']);
+                Route::post('/publicaciones', [AdminFormPublicationController::class, 'store']);
+                Route::get('/publicaciones/{publication:uuid}', [AdminFormPublicationController::class, 'show']);
+                Route::put('/publicaciones/{publication:uuid}', [AdminFormPublicationController::class, 'update']);
+
+                Route::get('/publicaciones/{publication:uuid}/asignaciones', [FormAssignmentController::class, 'index']);
+                Route::post('/publicaciones/{publication:uuid}/asignaciones', [FormAssignmentController::class, 'store']);
+
+                Route::get('/publicaciones/{publication:uuid}/audiencia', [PublicationAudienceController::class, 'show']);
+                Route::post('/publicaciones/{publication:uuid}/audiencia', [PublicationAudienceController::class, 'store']);
+                Route::post('/publicaciones/{publication:uuid}/audiencia/sincronizar', [PublicationAudienceController::class, 'sync']);
+                Route::post('/publicaciones/{publication:uuid}/audiencia/previsualizar', [PublicationAudienceController::class, 'preview']);
+
+                Route::get('/publicaciones/{publication:uuid}/invitaciones', [FormInvitationController::class, 'index']);
+                Route::post('/publicaciones/{publication:uuid}/invitaciones/{invitation:uuid}/regenerar', [FormInvitationController::class, 'regenerate']);
+                Route::post('/publicaciones/{publication:uuid}/invitaciones/{invitation:uuid}/cancelar', [FormInvitationController::class, 'cancel']);
+
                 Route::get('/versiones', [FormTypeVersionController::class, 'index']);
                 Route::post('/versiones', [FormTypeVersionController::class, 'store']);
                 Route::get('/versiones/{version}/constructor', [FormTypeVersionController::class, 'builder']);
