@@ -13,4 +13,11 @@ enum AuditAction: string
     case MembresiaActualizada = 'membresia_actualizada';
     case MembresiaEliminada = 'membresia_eliminada';
     case SesionRevocada = 'sesion_revocada';
+    case ListaDistribucionCreada = 'lista_distribucion_creada';
+    case ListaDistribucionActualizada = 'lista_distribucion_actualizada';
+    case ListaDistribucionMiembroAgregado = 'lista_distribucion_miembro_agregado';
+    case ListaDistribucionMiembroEliminado = 'lista_distribucion_miembro_eliminado';
+    case PublicacionAudienciaAsignada = 'publicacion_audiencia_asignada';
+    case InvitacionRegenerada = 'invitacion_regenerada';
+    case InvitacionCancelada = 'invitacion_cancelada';
 }

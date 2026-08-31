@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedRichText;
 use App\Policies\FormFieldPolicy;
 use Database\Factories\FormFieldFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -42,6 +43,7 @@ class FormField extends Model
     protected function casts(): array
     {
         return [
+            'description' => SanitizedRichText::class,
             'form_type_version_id' => 'integer',
             'field_type_id' => 'integer',
             'parent_field_id' => 'integer',
@@ -95,6 +97,14 @@ class FormField extends Model
     public function options(): HasMany
     {
         return $this->hasMany(FormFieldOption::class, 'form_field_id');
+    }
+
+    /**
+     * @return HasMany<FormResponseAnswer, $this>
+     */
+    public function answers(): HasMany
+    {
+        return $this->hasMany(FormResponseAnswer::class, 'form_field_id');
     }
 
     /**

@@ -48,6 +48,22 @@ class Company extends Model
     }
 
     /**
+     * @return HasMany<FormPublication, $this>
+     */
+    public function formPublications(): HasMany
+    {
+        return $this->hasMany(FormPublication::class, 'company_id');
+    }
+
+    /**
+     * @return HasMany<FormResponse, $this>
+     */
+    public function formResponses(): HasMany
+    {
+        return $this->hasMany(FormResponse::class, 'company_id');
+    }
+
+    /**
      * @return HasOne<CompanyBranding, $this>
      */
     public function branding(): HasOne

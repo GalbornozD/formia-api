@@ -30,7 +30,7 @@ class UpdateTipoFormularioRequest extends FormRequest
                     ->where('company_id', $this->empresaId())
                     ->ignore($this->route('tipoFormulario')),
             ],
-            'descripcion' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'descripcion' => ['sometimes', 'nullable', 'string', 'max:20000'],
             'estado' => ['sometimes', 'boolean'],
         ];
     }

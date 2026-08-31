@@ -77,6 +77,22 @@ class User extends Authenticatable
         return $this->hasMany(PasswordResetToken::class, 'user_id');
     }
 
+    /**
+     * @return HasMany<FormAssignment, $this>
+     */
+    public function formAssignments(): HasMany
+    {
+        return $this->hasMany(FormAssignment::class, 'user_id');
+    }
+
+    /**
+     * @return HasMany<FormResponse, $this>
+     */
+    public function formResponses(): HasMany
+    {
+        return $this->hasMany(FormResponse::class, 'user_id');
+    }
+
     public function membresiaActivaEn(int $empresaId): ?CompanyUser
     {
         return $this->membresias()

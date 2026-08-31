@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\GuestNotificationChannel;
+use App\Services\FormResponses\NullGuestNotificationChannel;
 use App\Support\EmpresaContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -17,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(EmpresaContext::class);
+
+        // Extensión futura: bindear aquí un canal real de email/sms/whatsapp
+        // en lugar del no-op, sin tocar InvitationService/PublicationAudienceService.
+        $this->app->bind(GuestNotificationChannel::class, NullGuestNotificationChannel::class);
     }
 
     /**
@@ -40,6 +46,12 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('password-reset', function (Request $request) {
             return Limit::perMinute(3)->by($request->ip().'|'.strtolower((string) $request->input('email')));
+        });
+
+        RateLimiter::for('public-forms', function (Request $request) {
+            $routeKey = (string) $request->route('publicationUuid', $request->route('responseUuid', $request->route('token', '')));
+
+            return Limit::perMinute(60)->by($request->ip().'|'.$routeKey);
         });
     }
 }

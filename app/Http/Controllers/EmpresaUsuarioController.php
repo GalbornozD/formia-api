@@ -12,6 +12,7 @@ use App\Services\UsuarioService;
 use App\Support\ApiResponse;
 use App\Support\Permisos;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * CRUD de usuarios dentro de una empresa (company_user + el User asociado).
@@ -39,6 +40,36 @@ class EmpresaUsuarioController extends Controller
         return ApiResponse::success(
             $usuarios->map(fn (CompanyUser $companyUser) => $this->usuarioArray($companyUser)),
         );
+    }
+
+    /**
+     * Búsqueda paginada server-side, pensada para pickers de destinatarios
+     * (listas de distribución, audiencia de publicaciones) en empresas con
+     * miles de usuarios — a diferencia de index(), que trae todo de una vez
+     * para la página de Usuarios (chica).
+     */
+    public function search(Request $request, Company $empresa): JsonResponse
+    {
+        $this->authorize('viewAny', [CompanyUser::class, $empresa]);
+
+        $term = trim((string) $request->string('q'));
+        $soloActivos = $request->boolean('solo_activos', true);
+
+        $usuarios = CompanyUser::with([self::COLUMNAS_USUARIO])
+            ->where('company_id', $empresa->id)
+            ->when($soloActivos, fn ($query) => $query->where('status', true)
+                ->whereHas('usuario', fn ($query) => $query->where('status', true)))
+            ->when($term !== '', function ($query) use ($term): void {
+                $query->whereHas('usuario', function ($query) use ($term): void {
+                    $query->where('email', 'like', "%{$term}%")
+                        ->orWhere('first_name', 'like', "%{$term}%")
+                        ->orWhere('last_name', 'like', "%{$term}%");
+                });
+            })
+            ->paginate(perPage: min(100, max(1, $request->integer('per_page', 20))))
+            ->through(fn (CompanyUser $companyUser) => $this->usuarioArray($companyUser));
+
+        return ApiResponse::success($usuarios);
     }
 
     public function store(StoreUsuarioRequest $request, Company $empresa): JsonResponse

@@ -28,7 +28,7 @@ class StoreFormFieldRequest extends FormRequest
             'parent_field_id' => ['nullable', 'integer', 'exists:form_fields,id'],
             'field_key' => ['required', 'string', 'max:100', 'regex:/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/'],
             'label' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:20000'],
             'placeholder' => ['nullable', 'string', 'max:255'],
             'default_value' => ['nullable'],
             'is_required' => ['sometimes', 'boolean'],
