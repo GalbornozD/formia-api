@@ -7,6 +7,7 @@ use App\Models\FormField;
 use App\Models\FormFieldOption;
 use App\Models\FormTypeVersion;
 use App\Models\User;
+use App\Services\FormBuilder\FieldPlacementRules;
 use App\Services\FormBuilder\FieldTypes\FieldTypeStrategyRegistry;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 final class FormFieldService
 {
-    public function __construct(private readonly FieldTypeStrategyRegistry $strategyRegistry) {}
+    public function __construct(
+        private readonly FieldTypeStrategyRegistry $strategyRegistry,
+        private readonly FieldPlacementRules $placementRules,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -385,9 +389,7 @@ final class FormFieldService
             throw ValidationException::withMessages(['parent_field_id' => 'Un campo no puede ser su propio padre.']);
         }
 
-        if ($parent->fieldType->code === 'table' && $childType->is_container) {
-            throw ValidationException::withMessages(['parent_field_id' => 'Las columnas de una tabla no pueden ser contenedores.']);
-        }
+        $this->placementRules->ensureCanBeChildOf($parent->fieldType, $childType, 'parent_field_id');
 
         if (! $skipCycleCheck && $field !== null && $this->wouldCreateCycle($version, $field->id, $parent->id)) {
             throw ValidationException::withMessages(['parent_field_id' => 'La jerarquía propuesta produciría una referencia circular.']);

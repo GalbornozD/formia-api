@@ -512,6 +512,55 @@ class FormBuilderTest extends TestCase
             ->assertJsonPath('data.fields.0.children.1.width', 6);
     }
 
+    public function test_table_column_allowlist_is_enforced_by_individual_field_endpoint(): void
+    {
+        $table = $this->createField('table', 'work_history');
+
+        foreach (['signature', 'file'] as $typeCode) {
+            $this->actingAs($this->actor, 'web')
+                ->postJson($this->versionUrl().'/campos', $this->fieldPayload($typeCode, "{$typeCode}_column", [
+                    'parent_field_id' => $table->id,
+                ]))
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('parent_field_id');
+        }
+
+        foreach (['text', 'select', 'yes_no'] as $typeCode) {
+            $field = $this->createField($typeCode, "{$typeCode}_column", [
+                'parent_field_id' => $table->id,
+            ]);
+
+            $this->assertSame($table->id, $field->parent_field_id);
+        }
+    }
+
+    public function test_table_column_allowlist_is_enforced_when_saving_complete_definition(): void
+    {
+        foreach (['signature', 'file'] as $typeCode) {
+            $this->actingAs($this->actor, 'web')
+                ->putJson($this->versionUrl().'/constructor', [
+                    'fields' => [
+                        $this->definitionFieldPayload('table', 'table', 'work_history'),
+                        $this->definitionFieldPayload($typeCode, 'column', "{$typeCode}_column", 'table'),
+                    ],
+                ])
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('fields.1.parent_client_id');
+        }
+
+        $this->actingAs($this->actor, 'web')
+            ->putJson($this->versionUrl().'/constructor', [
+                'fields' => [
+                    $this->definitionFieldPayload('table', 'table', 'work_history'),
+                    $this->definitionFieldPayload('select', 'select', 'status', 'table'),
+                    $this->definitionFieldPayload('yes_no', 'yes_no', 'is_current', 'table', 1),
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.fields.0.children.0.field_type.code', 'select')
+            ->assertJsonPath('data.fields.0.children.1.field_type.code', 'yes_no');
+    }
+
     public function test_repeatable_group_accepts_children_and_validates_item_limits(): void
     {
         $group = $this->createField('repeatable_group', 'workers', [
@@ -624,6 +673,34 @@ class FormBuilderTest extends TestCase
             'label' => str($fieldKey)->replace('_', ' ')->title()->toString(),
             'width' => 12,
             ...$overrides,
+        ];
+    }
+
+    private function definitionFieldPayload(
+        string $typeCode,
+        string $clientId,
+        string $fieldKey,
+        ?string $parentClientId = null,
+        int $sortOrder = 0,
+    ): array {
+        return [
+            'client_id' => $clientId,
+            'parent_client_id' => $parentClientId,
+            'field_type_id' => $this->fieldTypeId($typeCode),
+            'field_key' => $fieldKey,
+            'label' => str($fieldKey)->replace('_', ' ')->title()->toString(),
+            'description' => null,
+            'placeholder' => null,
+            'default_value' => null,
+            'is_required' => false,
+            'is_readonly' => false,
+            'is_hidden' => false,
+            'is_active' => true,
+            'sort_order' => $sortOrder,
+            'width' => 12,
+            'validation_rules' => [],
+            'settings' => [],
+            'options' => [],
         ];
     }
 
